@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vector>
 #include <string>
 #include <termios.h>
 #include <unistd.h>
@@ -7,20 +6,21 @@
 const int MAP_W = 16;
 const int MAP_H = 10;
 
+// The corridors are fully cleared out so you can walk anywhere!
 std::string map[MAP_H] = {
     "################",
-    "#    #     .   #",
-    "#    #  ###### #",
-    "## ###  #    # #",
-    "#    #  # .  # #",
-    "# .  #  #  ### #",
-    "#### #  #  #   #",
-    "#    #     # . #",
-    "#    #######   #",
+    "#          .   #",
+    "#   #   ###### #",
+    "#   ###      # #",
+    "#   #   # .  # #",
+    "# . #   ###### #",
+    "#   #   #      #",
+    "#   #      # . #",
+    "#       ####### #",
     "################"
 };
 
-int playerX = 2;
+int playerX = 1;
 int playerY = 1;
 int score = 0;
 int totalGems = 4;
@@ -28,12 +28,12 @@ int totalGems = 4;
 char getKeyPress() {
     char buf = 0;
     struct termios old = {0};
-    if (tcgetattr(0, &old) < 0) perror("tcsetattr()");
+    if (tcgetattr(0, &old) < 0) perror("tcgetattr()");
     old.c_lflag &= ~ICANON;
     old.c_lflag &= ~ECHO;
     old.c_cc[VMIN] = 1;
     old.c_cc[VTIME] = 0;
-    if (tcgetattr(0, &old) < 0) perror("tcsetattr()");
+    if (tcsetattr(0, TCSANOW, &old) < 0) perror("tcsetattr()");
     if (read(0, &buf, 1) < 0) perror("read()");
     old.c_lflag |= ICANON;
     old.c_lflag |= ECHO;
@@ -82,14 +82,16 @@ int main() {
         if (input == 'a' || input == 'A') targetX--;
         if (input == 'd' || input == 'D') targetX++;
 
-        if (map[targetY][targetX] != '#') {
-            playerX = targetX;
-            playerY = targetY;
+        if (targetX >= 0 && targetX < MAP_W && targetY >= 0 && targetY < MAP_H) {
+            if (map[targetY][targetX] != '#') {
+                playerX = targetX;
+                playerY = targetY;
 
-            if (map[playerY][playerX] == '.') {
-                map[playerY][playerX] = ' ';
-                score += 100;
-                totalGems--;
+                if (map[playerY][playerX] == '.') {
+                    map[playerY][playerX] = ' ';
+                    score += 100;
+                    totalGems--;
+                }
             }
         }
     }
